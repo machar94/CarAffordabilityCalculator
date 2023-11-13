@@ -1,0 +1,43 @@
+<mxfile host="Electron" modified="2023-11-13T18:53:41.558Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/22.0.3 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36" etag="aHx8ck9t6hrfbYSrS-OL" version="22.0.3" type="device">
+  <diagram name="Page-1" id="DMryCXHJuLPi4yDXpgRq">
+    <mxGraphModel dx="590" dy="515" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="oLkxLSWoOC6Z_PQ3GP_3-1" target="oLkxLSWoOC6Z_PQ3GP_3-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-1" value="User Input" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="oLkxLSWoOC6Z_PQ3GP_3-2" target="oLkxLSWoOC6Z_PQ3GP_3-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-2" value="Determine Intermediate Variables" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-4" value="* car 1 id&lt;br&gt;* car 2 id&lt;br&gt;* weekly miles&lt;br&gt;* gas price&lt;br&gt;* credit score&lt;br&gt;* car 1 cost&lt;br&gt;* car 2 cost&lt;br&gt;* term length&lt;br&gt;* down payment" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="120" y="240" width="140" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-5" value="* car 1 brand&lt;br&gt;* car 2 brand&lt;br&gt;* car 1 mpg&lt;br&gt;* car 2 mpg" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="320" y="240" width="140" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="oLkxLSWoOC6Z_PQ3GP_3-6" target="oLkxLSWoOC6Z_PQ3GP_3-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-6" value="Calculate Costs&lt;br&gt;Per Vehicle" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="520" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-8" value="* Gas&lt;br&gt;* Maintenance&lt;br&gt;* Loan" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="520" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-9" value="Recommendation" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="720" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="oLkxLSWoOC6Z_PQ3GP_3-11" value="Select: car 1 vs car 2&lt;br&gt;Explanation" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="720" y="240" width="140" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

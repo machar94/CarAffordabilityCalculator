@@ -64,7 +64,7 @@ def loan_payment(loan: Loan, car: Car, costs: Cost):
     """
     Calculate monthly loan payment
     """
-    
+
     loan_amount = max(car.cost - loan.down_payment, 0)
     total_interest = (loan.interest_rate / 12) * loan_amount * loan.term_length
     total_payments = total_interest + loan_amount
@@ -88,13 +88,13 @@ def get_car_info(car_id: int) -> (str, float):
     try:
         response = requests.get(url, headers=headers)
         response_json = response.json()
-        
+
         make = response_json["make"]
         mpg = response_json["comb08"]
     except requests.exceptions.RequestException as e:
         print("Error requesting vehicle information for ID: ", car_id)
         print(e)
-        
+
         return None, None
 
     return make, mpg
@@ -102,6 +102,7 @@ def get_car_info(car_id: int) -> (str, float):
 ########
 # Main #
 ########
+
 
 car_id = input("Enter car ID: ")
 
@@ -112,4 +113,3 @@ print("Make: ", make)
 print("MPG: ", mpg)
 
 # car = Car(make=make, cost=cost, mpg=mpg, cost=Cost(fuel=0, loan_payment=0, maintenance=0, total=0), fe_id=fe_id)
-

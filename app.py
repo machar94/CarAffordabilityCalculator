@@ -1,6 +1,20 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 import requests
+
+
+############
+# Defaults #
+############
+
+DEFAULT_CAR_ID = 46973
+DEFAULT_CAR_PRICE = 30000
+DEFAULT_WEEKLY_MILES = 192
+DEFAULT_GAS_PRICE = 3.365
+
+###############
+# Dataclasses #
+###############
 
 
 class CreditScore(Enum):
@@ -22,26 +36,41 @@ class CreditScore(Enum):
         elif self is CreditScore.SuperPrime:
             return "781-850"
 
+    @classmethod
+    def from_int(cls, selection):
+        if selection == 1:
+            return cls.SuperPrime
+        elif selection == 2:
+            return cls.NearPrime
+        elif selection == 3:
+            return cls.Prime
+        elif selection == 4:
+            return cls.SubPrime
+        elif selection == 5:
+            return cls.DeepSubPrime
+        else:
+            raise ValueError("Invalid selection")
+
 
 @dataclass
 class Cost():
     '''
     Monthly costs
     '''
-    fuel: float
-    loan_payment: float
-    maintenance: float
-    total: float
+    fuel: float = field(init=False, default=None)
+    loan_payment: float = field(init=False, default=None)
+    maintenance: float = field(init=False, default=None)
+    total: float = field(init=False, default=None)
 
 
 @dataclass
 class Car():
-    make: str
-    cost: float
-    mpg: float
-    cost: Cost
+    make: str = field(init=False)
+    price: float = field(init=False)
+    mpg: float = field(init=False)
+    monthly_cost: Cost = field(init=False, default_factory=Cost)
     # Vehicle ID on FeulEconomy.gov
-    fe_id: int
+    fe_id: int = field(init=False)
 
 
 @dataclass
@@ -49,15 +78,15 @@ class Loan():
     '''
     Loan characteristics
     '''
-    term_length: int
-    down_payment: float
-    interest_rate: float
+    down_payment: float = field(init=False)
+    interest_rate: float = field(init=False)
+    term_length: int = field(init=False)
 
 
 @dataclass
 class User():
-    weekly_miles: int
-    credit_score: CreditScore
+    gas_price: float = field(init=False)
+    weekly_miles: int = field(init=False)
 
 
 def loan_payment(loan: Loan, car: Car, costs: Cost):
@@ -90,7 +119,7 @@ def get_car_info(car_id: int) -> (str, float):
         response_json = response.json()
 
         make = response_json["make"]
-        mpg = response_json["comb08"]
+        mpg = float(response_json["comb08"])
     except requests.exceptions.RequestException as e:
         print("Error requesting vehicle information for ID: ", car_id)
         print(e)
@@ -99,17 +128,75 @@ def get_car_info(car_id: int) -> (str, float):
 
     return make, mpg
 
+
+def calculate_gas_cost(car: Car, user: User):
+    """
+    Calculate monthly gas cost
+    """
+
+    car.monthly_cost.fuel = (user.weekly_miles / car.mpg) * user.gas_price * 4
+
+
+def get_interest_rate():
+    """
+    Convert credit score from user to interest rate
+    """
+
+    for i, score in enumerate(CreditScore, start=1):
+        print(i, ". ", score)
+
+    while (True):
+        selection = input("Enter credit score (1-5): ")
+
+        try:
+            credit_score = CreditScore.from_int(int(selection))
+        except ValueError as e:
+            print("Invalid selection. Please try again.")
+            continue
+        else:
+            break
+
+    return credit_score.value
+
+
+def calculate_costs(cars: list, user: User, loan: Loan):
+    """
+    Calculate monthly costs for each car
+    """
+
+    for car in cars:
+        loan_payment(loan, car, costs)
+        calculate_gas_cost(car, user)
+        car.monthly_cost.total = car.monthly_cost.fuel + \
+            car.monthly_cost.loan_payment + car.monthly_cost.maintenance
+
+
 ########
 # Main #
 ########
 
+car_1 = Car()
+car_1.fe_id = int(input("Enter car ID 1 (default: 46973): ") or DEFAULT_CAR_ID)
+car_1.price = float(
+    input("Enter car price 1 (default: $30,000): ") or DEFAULT_CAR_PRICE)
 
-car_id = input("Enter car ID: ")
+make, mpg = get_car_info(car_1.fe_id)
+car_1.make = make
+car_1.mpg = mpg
 
-make, mpg = get_car_info(car_id)
+user_data = User()
+user_data.weekly_miles = float(
+    input("Enter weekly miles (default: 192): ") or DEFAULT_WEEKLY_MILES)
+user_data.gas_price = float(
+    input("Enter gas price (default: $3.365): ") or DEFAULT_GAS_PRICE)
 
-print("Car with ID: ", car_id)
-print("Make: ", make)
-print("MPG: ", mpg)
+loan = Loan()
+loan.interest_rate = get_interest_rate()
 
-# car = Car(make=make, cost=cost, mpg=mpg, cost=Cost(fuel=0, loan_payment=0, maintenance=0, total=0), fe_id=fe_id)
+calculate_gas_cost(car_1, user_data)
+calculate
+
+print(user_data)
+print(car_1)
+
+calculate_costs([car_1], user_data, loan)

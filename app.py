@@ -247,7 +247,7 @@ def get_user_input(makes: List[str]) -> (List[Car], User, Loan):
     weekly_miles = float(
         input(f"\nEnter weekly miles (default: {DEFAULT_WEEKLY_MILES}): ") or DEFAULT_WEEKLY_MILES)
     gas_price = float(
-        input(f"Enter gas price (default: {DEFAULT_GAS_PRICE}): ") or DEFAULT_GAS_PRICE)
+        input(f"Enter gas price per gallon (default: {DEFAULT_GAS_PRICE}): ") or DEFAULT_GAS_PRICE)
     credit_score = get_credit_score()
     user_data = User(credit_score, gas_price, weekly_miles)
 
@@ -329,9 +329,8 @@ def give_recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
     print("##############")
 
     print("\nVehicle Details")
-    vehicle_data = prettytable.PrettyTable(["Details", "Car 1", "Car 2"])
-    vehicle_data.add_row(["Make", car_1.make, car_2.make])
-    vehicle_data.add_row(["Model", car_1.model, car_2.model])
+    vehicle_data = prettytable.PrettyTable(
+        ["Details", f"{car_1.make} {car_1.model}", f"{car_2.make} {car_2.model}"])
     vehicle_data.add_row(["MPG", car_1.mpg, car_2.mpg])
     vehicle_data.add_row(["Price", car_1.price, car_2.price])
     print(vehicle_data)
@@ -345,6 +344,17 @@ def give_recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
     user_data.add_row(["Interest Rate", loan.interest_rate])
     print(user_data)
 
+    print("\nMonthly Costs")
+    monthly_costs = prettytable.PrettyTable([
+        "Monthly Costs", f"{car_1.make} {car_1.model}", f"{car_2.make} {car_2.model}"])
+    monthly_costs.add_row(["Fuel", car_1.monthly_cost.fuel,
+                           car_2.monthly_cost.fuel])
+    monthly_costs.add_row(
+        ["Loan Payment", car_1.monthly_cost.loan_payment, car_2.monthly_cost.loan_payment])
+    monthly_costs.add_row(
+        ["Maintenance", car_1.monthly_cost.maintenance, car_2.monthly_cost.maintenance])
+    print(monthly_costs)
+
     if car_1.monthly_cost.total < car_2.monthly_cost.total:
         print(
             f"\nRecommendation: Purchase {car_1.make} {car_1.model} for ${car_1.price}")
@@ -357,16 +367,6 @@ def give_recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
         print("\nRecommendation: Purchase either vehicle")
         recommendation = car_1
 
-    monthly_costs = prettytable.PrettyTable(
-        ["Monthly Costs", "Car 1", "Car 2"])
-    monthly_costs.add_row(["Fuel", car_1.monthly_cost.fuel,
-                           car_2.monthly_cost.fuel])
-    monthly_costs.add_row(
-        ["Loan Payment", car_1.monthly_cost.loan_payment, car_2.monthly_cost.loan_payment])
-    monthly_costs.add_row(
-        ["Maintenance", car_1.monthly_cost.maintenance, car_2.monthly_cost.maintenance])
-    print(monthly_costs)
-
     lower_fuel_cost = car_1
     lower_loan_payment = car_1
     lower_maintenance_cost = car_1
@@ -378,7 +378,7 @@ def give_recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
     if car_1.monthly_cost.maintenance > car_2.monthly_cost.maintenance:
         lower_maintenance_cost = car_2
 
-    print("Explanation")
+    print("\nExplanation")
     print("-----------")
     point = 1
     if recommendation == lower_fuel_cost:
@@ -393,6 +393,9 @@ def give_recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
         print(
             f"{point}. Maintenance cost is lower for {recommendation.make} {recommendation.model}")
         point += 1
+    print(
+            f"{point}. Overall monthly cost is lower for {recommendation.make} {recommendation.model}")
+    print()
 
 
 ########

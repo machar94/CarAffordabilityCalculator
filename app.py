@@ -91,15 +91,16 @@ class User():
     weekly_miles: int = field(init=False)
 
 
-def loan_payment(loan: Loan, car: Car, costs: Cost):
+def monthly_loan_payment(car: Car, loan: Loan):
     """
     Calculate monthly loan payment
     """
 
-    loan_amount = max(car.cost - loan.down_payment, 0)
+    loan_amount = max(car.price - loan.down_payment, 0)
     total_interest = (loan.interest_rate / 12) * loan_amount * loan.term_length
     total_payments = total_interest + loan_amount
-    costs.loan_payment = total_payments / loan.term_length
+    loan_payment = total_payments / loan.term_length
+    return loan_payment
 
 
 def get_car_info(car_id: int) -> (str, float):
@@ -131,12 +132,13 @@ def get_car_info(car_id: int) -> (str, float):
     return make, mpg
 
 
-def calculate_gas_cost(car: Car, user: User):
+def monthly_gas_cost(car: Car, user: User):
     """
     Calculate monthly gas cost
     """
 
-    car.monthly_cost.fuel = (user.weekly_miles / car.mpg) * user.gas_price * 4
+    gas_cost = (user.weekly_miles / car.mpg) * user.gas_price * 4
+    return gas_cost
 
 
 def get_interest_rate():
@@ -168,7 +170,10 @@ def calculate_costs(cars: list, user: User, loan: Loan):
 
     for car in cars:
         loan_payment(loan, car, costs)
-        calculate_gas_cost(car, user)
+        car.monthly_cost.fuel = monthly_gas_cost(car, user)
+        car.monthly_cost.loan_payment = monthly_loan_payment(car, loan)
+        car.monthly_cost.maintenance = 0
+        
         car.monthly_cost.total = car.monthly_cost.fuel + \
             car.monthly_cost.loan_payment + car.monthly_cost.maintenance
 

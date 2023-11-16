@@ -1,4 +1,4 @@
-# CarLoanCalculator
+# Car Affordability Calculator
 
 ## Description
 

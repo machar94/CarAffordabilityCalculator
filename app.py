@@ -4,7 +4,6 @@ from typing import Dict, List
 
 import requests
 import csv
-import pprint
 
 ############
 # Defaults #
@@ -72,9 +71,9 @@ class Cost():
 
 @dataclass
 class Car():
-    make: str = field(init=False)
-    price: float = field(init=False)
-    mpg: float = field(init=False)
+    make: str
+    price: float
+    mpg: float
     monthly_cost: Cost = field(init=False, default_factory=Cost)
 
 
@@ -138,7 +137,7 @@ def get_car_info(makes: List[str]) -> (str, float):
     """
 
     while (True):
-        car_id = input("Enter car ID (default: 46973): ") or DEFAULT_CAR_ID
+        car_id = input(f"Enter car ID (default: {DEFAULT_CAR_ID}): ") or DEFAULT_CAR_ID
         url = f"https://www.fueleconomy.gov/ws/rest/vehicle/{car_id}"
         headers = {
             "User-Agent": "CarLoanCalculator/1.0",
@@ -171,8 +170,10 @@ def get_interest_rate() -> float:
     Convert credit score from user to interest rate
     """
 
+    print("\nCredit Score Range")
     for i, score in enumerate(CreditScore, start=1):
         print(i, ". ", score)
+    print()
 
     while (True):
         selection = input("Enter credit score (1-5): ")
@@ -186,6 +187,70 @@ def get_interest_rate() -> float:
             break
 
     return credit_score.value
+
+
+def welcome_message():
+    """
+    Print welcome message
+    """
+
+    print("\n###################################")
+    print("Welcome to the Car Loan Calculator!")
+    print("###################################")
+    print()
+
+    long_string = (
+        "Overview: This calculator allows you to compare the monthly expected costs of\n"
+        "two vehicles. two vehicles. Vehicle data is pulled from FuelEconomy.gov and\n"
+        "maintenance costs are pulled from a local database.\n"
+    )
+
+    print(long_string)
+
+def get_user_input(makes: List[str]) -> (List[Car], User, Loan):
+    """
+    Collect user input for car, user, and loan data
+    """
+
+    welcome_message()
+
+    cars = []
+
+    print("###################")
+    print("Vehicle Information")
+    print("###################")
+
+    for i in range(1, 3):
+        print(f"\nVehicle {i} information")
+        print("-----------------------")
+        make, mpg = get_car_info(makes)
+        price = float(input(f"Enter price (default: ${DEFAULT_CAR_PRICE}): ") or DEFAULT_CAR_PRICE)
+
+        car = Car(make, price, mpg)
+        cars.append(car)
+
+    print("\n################")
+    print("User Information")
+    print("################")
+
+    user_data = User()
+    user_data.weekly_miles = float(
+        input(f"\nEnter weekly miles (default: {DEFAULT_WEEKLY_MILES}): ") or DEFAULT_WEEKLY_MILES)
+    user_data.gas_price = float(
+        input(f"Enter gas price (default: {DEFAULT_GAS_PRICE}): ") or DEFAULT_GAS_PRICE)
+
+    print("\n################")
+    print("Loan Information")
+    print("################")
+    
+    loan = Loan()
+    loan.down_payment = float(
+        input(f"\nEnter down payment (default: {DEFAULT_DOWN_PAYMENT}): ") or DEFAULT_DOWN_PAYMENT)
+    loan.term_length = int(
+        input(f"Enter loan term in months (default: {DEFAULT_TERM_LENGTH}): ") or DEFAULT_TERM_LENGTH)
+    loan.interest_rate = get_interest_rate()
+
+    return cars, user_data, loan
 
 
 def monthly_loan_payment(car: Car, loan: Loan) -> float:
@@ -243,36 +308,16 @@ def calculate_costs(cars: list, user: User, loan: Loan):
             car.monthly_cost.loan_payment + car.monthly_cost.maintenance
 
 
+
 ########
 # Main #
 ########
 
-pp = pprint.PrettyPrinter(indent=4)
-
-print("Welcome to the Car Loan Calculator!")
-
 maintenance_costs = read_maintenance_costs()
-make, mpg = get_car_info(list(maintenance_costs.keys()))
 
-car_1 = Car()
-car_1.make = make
-car_1.mpg = mpg
-car_1.price = float(
-    input("Enter car price 1 (default: $30,000): ") or DEFAULT_CAR_PRICE)
+available_makes = list(maintenance_costs.keys())
 
-user_data = User()
-user_data.weekly_miles = float(
-    input("Enter weekly miles (default: 192): ") or DEFAULT_WEEKLY_MILES)
-user_data.gas_price = float(
-    input("Enter gas price (default: $3.365): ") or DEFAULT_GAS_PRICE)
+cars, user_data, loan = get_user_input(available_makes)
 
-loan = Loan()
-loan.down_payment = float(
-    input("Enter down payment (default: $0.00): ") or DEFAULT_DOWN_PAYMENT)
-loan.term_length = int(
-    input("Enter loan term in months (default: 60): ") or DEFAULT_TERM_LENGTH)
-loan.interest_rate = get_interest_rate()
+calculate_costs(cars, user_data, loan)
 
-calculate_costs([car_1], user_data, loan)
-print(user_data)
-print(car_1)

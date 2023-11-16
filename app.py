@@ -11,6 +11,8 @@ DEFAULT_CAR_ID = 46973
 DEFAULT_CAR_PRICE = 30000
 DEFAULT_WEEKLY_MILES = 192
 DEFAULT_GAS_PRICE = 3.365
+DEFAULT_DOWN_PAYMENT = 0.00
+DEFAULT_TERM_LENGTH = 60
 
 ###############
 # Dataclasses #
@@ -175,6 +177,7 @@ def calculate_costs(cars: list, user: User, loan: Loan):
 # Main #
 ########
 
+
 car_1 = Car()
 car_1.fe_id = int(input("Enter car ID 1 (default: 46973): ") or DEFAULT_CAR_ID)
 car_1.price = float(
@@ -191,10 +194,15 @@ user_data.gas_price = float(
     input("Enter gas price (default: $3.365): ") or DEFAULT_GAS_PRICE)
 
 loan = Loan()
+loan.down_payment = float(
+    input("Enter down payment (default: $0.00): ") or DEFAULT_DOWN_PAYMENT)
+loan.term_length = int(
+    input("Enter loan term in months (default: 60): ") or DEFAULT_TERM_LENGTH)
 loan.interest_rate = get_interest_rate()
 
+
 calculate_gas_cost(car_1, user_data)
-calculate
+
 
 print(user_data)
 print(car_1)

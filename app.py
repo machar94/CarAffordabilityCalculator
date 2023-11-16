@@ -137,7 +137,7 @@ def get_car_info(makes: List[str]) -> (str, float):
         mpg: float
     """
 
-    while(True):
+    while (True):
         car_id = input("Enter car ID (default: 46973): ") or DEFAULT_CAR_ID
         url = f"https://www.fueleconomy.gov/ws/rest/vehicle/{car_id}"
         headers = {
@@ -151,18 +151,19 @@ def get_car_info(makes: List[str]) -> (str, float):
 
             make = response_json["make"]
             mpg = float(response_json["comb08"])
-        
+
         except requests.exceptions.RequestException as e:
             print("Error requesting vehicle information for ID: ", car_id)
             print("Please try again.")
             print(e)
-            continue 
-
-        if make.upper() not in makes:
-            print(f"No maintenance data available for {make}. Please select another vehicle.")
             continue
 
-        return make, mpg
+        if make.upper() not in makes:
+            print(
+                f"No maintenance data available for {make}. Please select another vehicle.")
+            continue
+
+        return make.upper(), mpg
 
 
 def get_interest_rate() -> float:
@@ -193,12 +194,13 @@ def monthly_loan_payment(car: Car, loan: Loan) -> float:
     """
 
     loan_amount = max(car.price - loan.down_payment, 0)
-    total_interest = (loan.interest_rate / 100 / 12) * loan_amount * loan.term_length
+    total_interest = (loan.interest_rate / 100 / 12) * \
+        loan_amount * loan.term_length
     total_payments = total_interest + loan_amount
     loan_payment = total_payments / loan.term_length
 
     # Round loan_payment to 2 decimal places
-    return round(loan_payment, 2) 
+    return round(loan_payment, 2)
 
 
 def monthly_gas_cost(car: Car, user: User) -> float:
@@ -210,6 +212,22 @@ def monthly_gas_cost(car: Car, user: User) -> float:
     return round(gas_cost, 2)
 
 
+def monthly_maintenance_cost(car: Car, loan: Loan, maintenance_costs: Dict[str, AutoMaintenance]) -> float:
+    """
+    Calculate monthly maintenance cost
+    """
+
+    cost_1_to_60 = maintenance_costs[car.make].cost_1_to_60
+    cost_61_to_120 = maintenance_costs[car.make].cost_61_to_120
+
+    cost_before_5_years = min(60, loan.term_length) * cost_1_to_60 / 60
+    cost_after_5_years = max(0, loan.term_length - 60) * cost_61_to_120 / 60
+
+    avg_monthly_maintenance_cost = (
+        cost_after_5_years + cost_before_5_years) / loan.term_length
+    return round(avg_monthly_maintenance_cost, 2)
+
+
 def calculate_costs(cars: list, user: User, loan: Loan):
     """
     Calculate monthly costs for each car
@@ -218,7 +236,8 @@ def calculate_costs(cars: list, user: User, loan: Loan):
     for car in cars:
         car.monthly_cost.fuel = monthly_gas_cost(car, user)
         car.monthly_cost.loan_payment = monthly_loan_payment(car, loan)
-        car.monthly_cost.maintenance = 0
+        car.monthly_cost.maintenance = monthly_maintenance_cost(
+            car, loan, maintenance_costs)
 
         car.monthly_cost.total = car.monthly_cost.fuel + \
             car.monthly_cost.loan_payment + car.monthly_cost.maintenance
@@ -257,4 +276,3 @@ loan.interest_rate = get_interest_rate()
 calculate_costs([car_1], user_data, loan)
 print(user_data)
 print(car_1)
-

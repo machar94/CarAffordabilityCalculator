@@ -43,9 +43,9 @@ poetry run python app.py
 ### Sample Output
 
 ```
-###################################
-Welcome to the Car Loan Calculator!
-###################################
+############################################
+Welcome to the Car Affordability Calculator!
+############################################
 
 Overview: This calculator allows you to compare the monthly expected costs of
 two vehicles. two vehicles. Vehicle data is pulled from FuelEconomy.gov and

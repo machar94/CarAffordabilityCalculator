@@ -200,9 +200,9 @@ def welcome_message():
     Print welcome message
     """
 
-    print("\n###################################")
-    print("Welcome to the Car Loan Calculator!")
-    print("###################################")
+    print("\n############################################")
+    print("Welcome to the Car Affordability Calculator!")
+    print("############################################")
     print()
 
     long_string = (

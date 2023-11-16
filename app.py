@@ -1,10 +1,10 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict
+from typing import Dict, List
 
 import requests
 import csv
-
+import pprint
 
 ############
 # Defaults #
@@ -46,15 +46,15 @@ class CreditScore(Enum):
     @classmethod
     def from_int(cls, selection):
         if selection == 1:
-            return cls.SuperPrime
-        elif selection == 2:
-            return cls.NearPrime
-        elif selection == 3:
-            return cls.Prime
-        elif selection == 4:
-            return cls.SubPrime
-        elif selection == 5:
             return cls.DeepSubPrime
+        elif selection == 2:
+            return cls.SubPrime
+        elif selection == 3:
+            return cls.NearPrime
+        elif selection == 4:
+            return cls.Prime
+        elif selection == 5:
+            return cls.SuperPrime
         else:
             raise ValueError("Invalid selection")
 
@@ -76,8 +76,6 @@ class Car():
     price: float = field(init=False)
     mpg: float = field(init=False)
     monthly_cost: Cost = field(init=False, default_factory=Cost)
-    # Vehicle ID on FeulEconomy.gov
-    fe_id: int = field(init=False)
 
 
 @dataclass
@@ -128,33 +126,43 @@ def read_maintenance_costs() -> Dict[str, AutoMaintenance]:
     return maintenance_costs
 
 
-def get_car_info(car_id: int) -> (str, float):
+def get_car_info(makes: List[str]) -> (str, float):
     """
     Get car information from FuelEconomy.gov API
 
+    Args:
+        makes: List of valid makes
     Returns:
-        make: str
+        make: str 
         mpg: float
     """
-    url = f"https://www.fueleconomy.gov/ws/rest/vehicle/{car_id}"
-    headers = {
-        "User-Agent": "CarLoanCalculator/1.0",
-        "Accept": "application/json"
-    }
 
-    try:
-        response = requests.get(url, headers=headers)
-        response_json = response.json()
+    while(True):
+        car_id = input("Enter car ID (default: 46973): ") or DEFAULT_CAR_ID
+        url = f"https://www.fueleconomy.gov/ws/rest/vehicle/{car_id}"
+        headers = {
+            "User-Agent": "CarLoanCalculator/1.0",
+            "Accept": "application/json"
+        }
 
-        make = response_json["make"]
-        mpg = float(response_json["comb08"])
-    except requests.exceptions.RequestException as e:
-        print("Error requesting vehicle information for ID: ", car_id)
-        print(e)
+        try:
+            response = requests.get(url, headers=headers)
+            response_json = response.json()
 
-        return None, None
+            make = response_json["make"]
+            mpg = float(response_json["comb08"])
+        
+        except requests.exceptions.RequestException as e:
+            print("Error requesting vehicle information for ID: ", car_id)
+            print("Please try again.")
+            print(e)
+            continue 
 
-    return make, mpg
+        if make.upper() not in makes:
+            print(f"No maintenance data available for {make}. Please select another vehicle.")
+            continue
+
+        return make, mpg
 
 
 def get_interest_rate() -> float:
@@ -185,10 +193,12 @@ def monthly_loan_payment(car: Car, loan: Loan) -> float:
     """
 
     loan_amount = max(car.price - loan.down_payment, 0)
-    total_interest = (loan.interest_rate / 12) * loan_amount * loan.term_length
+    total_interest = (loan.interest_rate / 100 / 12) * loan_amount * loan.term_length
     total_payments = total_interest + loan_amount
     loan_payment = total_payments / loan.term_length
-    return loan_payment
+
+    # Round loan_payment to 2 decimal places
+    return round(loan_payment, 2) 
 
 
 def monthly_gas_cost(car: Car, user: User) -> float:
@@ -197,7 +207,7 @@ def monthly_gas_cost(car: Car, user: User) -> float:
     """
 
     gas_cost = (user.weekly_miles / car.mpg) * user.gas_price * 4
-    return gas_cost
+    return round(gas_cost, 2)
 
 
 def calculate_costs(cars: list, user: User, loan: Loan):
@@ -206,7 +216,6 @@ def calculate_costs(cars: list, user: User, loan: Loan):
     """
 
     for car in cars:
-        loan_payment(loan, car, costs)
         car.monthly_cost.fuel = monthly_gas_cost(car, user)
         car.monthly_cost.loan_payment = monthly_loan_payment(car, loan)
         car.monthly_cost.maintenance = 0
@@ -219,21 +228,18 @@ def calculate_costs(cars: list, user: User, loan: Loan):
 # Main #
 ########
 
+pp = pprint.PrettyPrinter(indent=4)
+
 print("Welcome to the Car Loan Calculator!")
 
-print(read_maintenance_costs())
-exit()
-
-
+maintenance_costs = read_maintenance_costs()
+make, mpg = get_car_info(list(maintenance_costs.keys()))
 
 car_1 = Car()
-car_1.fe_id = int(input("Enter car ID 1 (default: 46973): ") or DEFAULT_CAR_ID)
-car_1.price = float(
-    input("Enter car price 1 (default: $30,000): ") or DEFAULT_CAR_PRICE)
-
-make, mpg = get_car_info(car_1.fe_id)
 car_1.make = make
 car_1.mpg = mpg
+car_1.price = float(
+    input("Enter car price 1 (default: $30,000): ") or DEFAULT_CAR_PRICE)
 
 user_data = User()
 user_data.weekly_miles = float(
@@ -248,11 +254,7 @@ loan.term_length = int(
     input("Enter loan term in months (default: 60): ") or DEFAULT_TERM_LENGTH)
 loan.interest_rate = get_interest_rate()
 
-
-calculate_gas_cost(car_1, user_data)
-
-
+calculate_costs([car_1], user_data, loan)
 print(user_data)
 print(car_1)
 
-calculate_costs([car_1], user_data, loan)

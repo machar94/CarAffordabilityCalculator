@@ -1,6 +1,9 @@
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Dict
+
 import requests
+import csv
 
 
 ############
@@ -13,6 +16,8 @@ DEFAULT_WEEKLY_MILES = 192
 DEFAULT_GAS_PRICE = 3.365
 DEFAULT_DOWN_PAYMENT = 0.00
 DEFAULT_TERM_LENGTH = 60
+
+DEFAULT_DB_PATH = "data/maintenance.csv"
 
 ###############
 # Dataclasses #
@@ -91,16 +96,36 @@ class User():
     weekly_miles: int = field(init=False)
 
 
-def monthly_loan_payment(car: Car, loan: Loan):
+@dataclass
+class AutoMaintenance():
+    cost_1_to_60: float
+    cost_61_to_120: float
+
+
+#############
+# Functions #
+#############
+
+
+def read_maintenance_costs() -> Dict[str, AutoMaintenance]:
     """
-    Calculate monthly loan payment
+    Read local maintenance database
     """
 
-    loan_amount = max(car.price - loan.down_payment, 0)
-    total_interest = (loan.interest_rate / 12) * loan_amount * loan.term_length
-    total_payments = total_interest + loan_amount
-    loan_payment = total_payments / loan.term_length
-    return loan_payment
+    reader = csv.reader(open(DEFAULT_DB_PATH, "r"))
+
+    next(reader)  # Skip header
+
+    maintenance_costs = {}
+
+    for row in reader:
+        make = row[0].upper()
+        cost_1_to_60 = float(row[1])
+        cost_61_to_120 = float(row[2])
+
+        maintenance_costs[make] = AutoMaintenance(cost_1_to_60, cost_61_to_120)
+
+    return maintenance_costs
 
 
 def get_car_info(car_id: int) -> (str, float):
@@ -132,16 +157,7 @@ def get_car_info(car_id: int) -> (str, float):
     return make, mpg
 
 
-def monthly_gas_cost(car: Car, user: User):
-    """
-    Calculate monthly gas cost
-    """
-
-    gas_cost = (user.weekly_miles / car.mpg) * user.gas_price * 4
-    return gas_cost
-
-
-def get_interest_rate():
+def get_interest_rate() -> float:
     """
     Convert credit score from user to interest rate
     """
@@ -163,6 +179,27 @@ def get_interest_rate():
     return credit_score.value
 
 
+def monthly_loan_payment(car: Car, loan: Loan) -> float:
+    """
+    Calculate monthly loan payment
+    """
+
+    loan_amount = max(car.price - loan.down_payment, 0)
+    total_interest = (loan.interest_rate / 12) * loan_amount * loan.term_length
+    total_payments = total_interest + loan_amount
+    loan_payment = total_payments / loan.term_length
+    return loan_payment
+
+
+def monthly_gas_cost(car: Car, user: User) -> float:
+    """
+    Calculate monthly gas cost
+    """
+
+    gas_cost = (user.weekly_miles / car.mpg) * user.gas_price * 4
+    return gas_cost
+
+
 def calculate_costs(cars: list, user: User, loan: Loan):
     """
     Calculate monthly costs for each car
@@ -173,7 +210,7 @@ def calculate_costs(cars: list, user: User, loan: Loan):
         car.monthly_cost.fuel = monthly_gas_cost(car, user)
         car.monthly_cost.loan_payment = monthly_loan_payment(car, loan)
         car.monthly_cost.maintenance = 0
-        
+
         car.monthly_cost.total = car.monthly_cost.fuel + \
             car.monthly_cost.loan_payment + car.monthly_cost.maintenance
 
@@ -181,6 +218,12 @@ def calculate_costs(cars: list, user: User, loan: Loan):
 ########
 # Main #
 ########
+
+print("Welcome to the Car Loan Calculator!")
+
+print(read_maintenance_costs())
+exit()
+
 
 
 car_1 = Car()

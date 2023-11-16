@@ -2,8 +2,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List
 
-import requests
 import csv
+import prettytable
+import requests
 
 ############
 # Defaults #
@@ -72,28 +73,30 @@ class Cost():
 @dataclass
 class Car():
     make: str
+    model: str
     price: float
     mpg: float
     monthly_cost: Cost = field(init=False, default_factory=Cost)
 
 
-@dataclass
+@dataclass(frozen=True)
 class Loan():
     '''
     Loan characteristics
     '''
-    down_payment: float = field(init=False)
-    interest_rate: float = field(init=False)
-    term_length: int = field(init=False)
+    down_payment: float
+    interest_rate: float
+    term_length: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class User():
-    gas_price: float = field(init=False)
-    weekly_miles: int = field(init=False)
+    credit_score: CreditScore
+    gas_price: float
+    weekly_miles: int
 
 
-@dataclass
+@dataclass(frozen=True)
 class AutoMaintenance():
     cost_1_to_60: float
     cost_61_to_120: float
@@ -125,19 +128,21 @@ def read_maintenance_costs() -> Dict[str, AutoMaintenance]:
     return maintenance_costs
 
 
-def get_car_info(makes: List[str]) -> (str, float):
+def get_car_info(makes: List[str]) -> (str, str, float):
     """
     Get car information from FuelEconomy.gov API
 
     Args:
         makes: List of valid makes
     Returns:
-        make: str 
+        make: str
+        model: str
         mpg: float
     """
 
     while (True):
-        car_id = input(f"Enter car ID (default: {DEFAULT_CAR_ID}): ") or DEFAULT_CAR_ID
+        car_id = input(
+            f"Enter car ID (default: Nissan Leaf {DEFAULT_CAR_ID}): ") or DEFAULT_CAR_ID
         url = f"https://www.fueleconomy.gov/ws/rest/vehicle/{car_id}"
         headers = {
             "User-Agent": "CarLoanCalculator/1.0",
@@ -149,6 +154,7 @@ def get_car_info(makes: List[str]) -> (str, float):
             response_json = response.json()
 
             make = response_json["make"]
+            model = response_json["model"]
             mpg = float(response_json["comb08"])
 
         except requests.exceptions.RequestException as e:
@@ -162,12 +168,12 @@ def get_car_info(makes: List[str]) -> (str, float):
                 f"No maintenance data available for {make}. Please select another vehicle.")
             continue
 
-        return make.upper(), mpg
+        return make.upper(), model, mpg
 
 
-def get_interest_rate() -> float:
+def get_credit_score() -> CreditScore:
     """
-    Convert credit score from user to interest rate
+    Get credit score from user
     """
 
     print("\nCredit Score Range")
@@ -186,7 +192,7 @@ def get_interest_rate() -> float:
         else:
             break
 
-    return credit_score.value
+    return credit_score
 
 
 def welcome_message():
@@ -203,9 +209,13 @@ def welcome_message():
         "Overview: This calculator allows you to compare the monthly expected costs of\n"
         "two vehicles. two vehicles. Vehicle data is pulled from FuelEconomy.gov and\n"
         "maintenance costs are pulled from a local database.\n"
+
+        "Select a car on https://www.fueleconomy.gov/feg/findacar.shtml and look at the\n"
+        "URL to find the car id.\n"
     )
 
     print(long_string)
+
 
 def get_user_input(makes: List[str]) -> (List[Car], User, Loan):
     """
@@ -223,32 +233,33 @@ def get_user_input(makes: List[str]) -> (List[Car], User, Loan):
     for i in range(1, 3):
         print(f"\nVehicle {i} information")
         print("-----------------------")
-        make, mpg = get_car_info(makes)
-        price = float(input(f"Enter price (default: ${DEFAULT_CAR_PRICE}): ") or DEFAULT_CAR_PRICE)
+        make, model, mpg = get_car_info(makes)
+        price = float(
+            input(f"Enter price (default: ${DEFAULT_CAR_PRICE}): ") or DEFAULT_CAR_PRICE)
 
-        car = Car(make, price, mpg)
+        car = Car(make, model, price, mpg)
         cars.append(car)
 
     print("\n################")
     print("User Information")
     print("################")
 
-    user_data = User()
-    user_data.weekly_miles = float(
+    weekly_miles = float(
         input(f"\nEnter weekly miles (default: {DEFAULT_WEEKLY_MILES}): ") or DEFAULT_WEEKLY_MILES)
-    user_data.gas_price = float(
+    gas_price = float(
         input(f"Enter gas price (default: {DEFAULT_GAS_PRICE}): ") or DEFAULT_GAS_PRICE)
+    credit_score = get_credit_score()
+    user_data = User(credit_score, gas_price, weekly_miles)
 
     print("\n################")
     print("Loan Information")
     print("################")
-    
-    loan = Loan()
-    loan.down_payment = float(
+
+    down_payment = float(
         input(f"\nEnter down payment (default: {DEFAULT_DOWN_PAYMENT}): ") or DEFAULT_DOWN_PAYMENT)
-    loan.term_length = int(
+    term_length = int(
         input(f"Enter loan term in months (default: {DEFAULT_TERM_LENGTH}): ") or DEFAULT_TERM_LENGTH)
-    loan.interest_rate = get_interest_rate()
+    loan = Loan(down_payment, credit_score.value, term_length)
 
     return cars, user_data, loan
 
@@ -308,6 +319,44 @@ def calculate_costs(cars: list, user: User, loan: Loan):
             car.monthly_cost.loan_payment + car.monthly_cost.maintenance
 
 
+def recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
+    """
+    Recommend car based on lowest monthly cost
+    """
+
+    print("\n##############")
+    print("Recommendation")
+    print("##############")
+
+    print("\nVehicle Details")
+    vehicle_data = prettytable.PrettyTable(["Details", "Car 1", "Car 2"])
+    vehicle_data.add_row(["Make", car_1.make, car_2.make])
+    vehicle_data.add_row(["Model", car_1.model, car_2.model])
+    vehicle_data.add_row(["MPG", car_1.mpg, car_2.mpg])
+    vehicle_data.add_row(["Price", car_1.price, car_2.price])
+    print(vehicle_data)
+
+    print("\nUser Data")
+    user_data = prettytable.PrettyTable(["User Data", "Value"])
+    user_data.add_row(["Weekly Miles", user.weekly_miles])
+    user_data.add_row(["Loal Gas Price", user.gas_price])
+    user_data.add_row(["Credit Score", user.credit_score])
+    user_data.add_row(["Down Payment", loan.down_payment])
+    user_data.add_row(["Interest Rate", loan.interest_rate])
+    print(user_data)
+
+    # Print monthly costs for each car
+    # Print explanation
+
+    if car_1.monthly_cost.total < car_2.monthly_cost.total:
+        print(
+            f"\nRecommendation: Purchase {car_1.make} {car_1.model} for ${car_1.price}")
+    elif car_1.monthly_cost.total > car_2.monthly_cost.total:
+        print(
+            f"\nRecommendation: Purchase {car_2.make} {car_2.model} for ${car_2.price}")
+    else:
+        print("\nRecommendation: Purchase either vehicle")
+
 
 ########
 # Main #
@@ -321,3 +370,4 @@ cars, user_data, loan = get_user_input(available_makes)
 
 calculate_costs(cars, user_data, loan)
 
+recommendation(cars[0], cars[1], user_data, loan)

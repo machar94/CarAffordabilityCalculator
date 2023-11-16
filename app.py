@@ -209,7 +209,7 @@ def welcome_message():
         "Overview: This calculator allows you to compare the monthly expected costs of\n"
         "two vehicles. two vehicles. Vehicle data is pulled from FuelEconomy.gov and\n"
         "maintenance costs are pulled from a local database.\n"
-
+        "\n"
         "Select a car on https://www.fueleconomy.gov/feg/findacar.shtml and look at the\n"
         "URL to find the car id.\n"
     )
@@ -319,7 +319,7 @@ def calculate_costs(cars: list, user: User, loan: Loan):
             car.monthly_cost.loan_payment + car.monthly_cost.maintenance
 
 
-def recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
+def give_recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
     """
     Recommend car based on lowest monthly cost
     """
@@ -345,22 +345,60 @@ def recommendation(car_1: Car, car_2: Car, user: User, loan: Loan):
     user_data.add_row(["Interest Rate", loan.interest_rate])
     print(user_data)
 
-    # Print monthly costs for each car
-    # Print explanation
-
     if car_1.monthly_cost.total < car_2.monthly_cost.total:
         print(
             f"\nRecommendation: Purchase {car_1.make} {car_1.model} for ${car_1.price}")
+        recommendation = car_1
     elif car_1.monthly_cost.total > car_2.monthly_cost.total:
         print(
             f"\nRecommendation: Purchase {car_2.make} {car_2.model} for ${car_2.price}")
+        recommendation = car_2
     else:
         print("\nRecommendation: Purchase either vehicle")
+        recommendation = car_1
+
+    monthly_costs = prettytable.PrettyTable(
+        ["Monthly Costs", "Car 1", "Car 2"])
+    monthly_costs.add_row(["Fuel", car_1.monthly_cost.fuel,
+                           car_2.monthly_cost.fuel])
+    monthly_costs.add_row(
+        ["Loan Payment", car_1.monthly_cost.loan_payment, car_2.monthly_cost.loan_payment])
+    monthly_costs.add_row(
+        ["Maintenance", car_1.monthly_cost.maintenance, car_2.monthly_cost.maintenance])
+    print(monthly_costs)
+
+    lower_fuel_cost = car_1
+    lower_loan_payment = car_1
+    lower_maintenance_cost = car_1
+
+    if car_1.monthly_cost.fuel > car_2.monthly_cost.fuel:
+        lower_fuel_cost = car_2
+    if car_1.monthly_cost.loan_payment > car_2.monthly_cost.loan_payment:
+        lower_loan_payment = car_2
+    if car_1.monthly_cost.maintenance > car_2.monthly_cost.maintenance:
+        lower_maintenance_cost = car_2
+
+    print("Explanation")
+    print("-----------")
+    point = 1
+    if recommendation == lower_fuel_cost:
+        print(
+            f"{point}. Fuel cost is lower for {recommendation.make} {recommendation.model}")
+        point += 1
+    if recommendation == lower_loan_payment:
+        print(
+            f"{point}. Loan payment is lower for {recommendation.make} {recommendation.model}")
+        point += 1
+    if recommendation == lower_maintenance_cost:
+        print(
+            f"{point}. Maintenance cost is lower for {recommendation.make} {recommendation.model}")
+        point += 1
 
 
 ########
 # Main #
 ########
+
 
 maintenance_costs = read_maintenance_costs()
 
@@ -370,4 +408,4 @@ cars, user_data, loan = get_user_input(available_makes)
 
 calculate_costs(cars, user_data, loan)
 
-recommendation(cars[0], cars[1], user_data, loan)
+give_recommendation(cars[0], cars[1], user_data, loan)
